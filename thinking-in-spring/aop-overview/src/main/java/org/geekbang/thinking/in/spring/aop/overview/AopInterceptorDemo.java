@@ -16,6 +16,9 @@
  */
 package org.geekbang.thinking.in.spring.aop.overview;
 
+import org.omg.PortableServer.THREAD_POLICY_ID;
+
+import javax.naming.event.ObjectChangeListener;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -28,6 +31,49 @@ import java.lang.reflect.Proxy;
  */
 public class AopInterceptorDemo {
 
+    private void main() {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Object proxy = Proxy.newProxyInstance(classLoader, new Class[]{EchoService.class}, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                if(EchoService.class.isAssignableFrom(method.getDeclaringClass())) {
+                    //前置拦截器
+                    BeforeInterceptor beforeInterceptor = new BeforeInterceptor() {
+                        @Override
+                        public Object before(Object proxy, Method method, Object[] args) {
+                           return System.currentTimeMillis();
+                        }
+                    };
+                    Long startTime = 0L;
+                    Long endTime = 0L;
+                    Object result = null;
+                    try {
+                        startTime = (Long)beforeInterceptor.before(proxy, method, args);
+                        EchoService echoService = new DefaultEchoService();
+                        result = echoService.echo((String)args[0]);
+                        //方法执行后置拦截器
+                        AfterReturnInterceptor afterReturnInterceptor = new AfterReturnInterceptor() {
+                            @Override
+                            public Object after(Object proxy, Method method, Object[] args, Object returnResult) {
+                                return System.currentTimeMillis();
+                            }
+                        };
+                        //
+                        endTime = (Long)afterReturnInterceptor.after(proxy, method, args, result);
+                    } catch (Exception e) {
+                        ExceptionInterceptor interceptor = (proxy1, method1, args1, throwable) -> {
+
+                        };
+                    } finally {
+                        FinallyInterceptor interceptor = new TimeFinallyInterceptor(startTime, endTime);
+                        Long costTime = (Long)interceptor.finalize(proxy, method, args, result);
+                        System.out.println("echo 方法执行的时间" + costTime + "ms");
+                    }
+                }
+                return null;
+            }
+        });
+    }
     public static void main(String[] args) {
         // 前置模式 + 后置模式
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

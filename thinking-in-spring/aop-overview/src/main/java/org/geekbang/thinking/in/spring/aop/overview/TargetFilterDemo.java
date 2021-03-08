@@ -27,6 +27,28 @@ import java.lang.reflect.Method;
  * @since
  */
 public class TargetFilterDemo {
+    private static void main() throws ClassNotFoundException {
+        String targetClassName = "org.geekbang.thinking.in.spring.aop.overview.EchoService";
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Class<?> targetClass = classLoader.loadClass(targetClassName);
+        Method targetMethod = ReflectionUtils.findMethod(targetClass, "echo", String.class);
+        System.out.println(targetMethod);
+        ReflectionUtils.doWithMethods(targetClass, new ReflectionUtils.MethodCallback() {
+            @Override
+            public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
+                System.out.println("仅抛出 NullPointerException 方法为：" + method);
+            }
+        }, new ReflectionUtils.MethodFilter() {
+            @Override
+            public boolean matches(Method method) {
+                Class[] parameterTypes = method.getParameterTypes();
+                Class[] exceptionTypes = method.getExceptionTypes();
+                return parameterTypes.length == 1
+                        && String.class.equals(parameterTypes[0])
+                        && NullPointerException.class.equals(exceptionTypes[0]);
+            }
+        });
+    }
 
     public static void main(String[] args) throws ClassNotFoundException {
         String targetClassName = "org.geekbang.thinking.in.spring.aop.overview.EchoService";
