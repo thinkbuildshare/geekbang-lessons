@@ -1,9 +1,9 @@
 package org.geektimes.projects.user.domain;
 
+import org.hibernate.validator.constraints.Range;
+
 import javax.persistence.*;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -19,22 +19,23 @@ import static javax.persistence.GenerationType.AUTO;
 public class User implements Serializable {
 
     @Id
+    @Range(min = 1, message = "id必须是大于0的整数")
     @GeneratedValue(strategy = AUTO)
-    @NotNull
+//    @NotNull
     private Long id;
 
     @Column
     private String name;
 
     @Column
-    @Max(32)
-    @Min(6)
+    @Size(min = 6, max=32, message = "密码：6-32位")
     private String password;
 
     @Column
     private String email;
 
     @Column
+    @Pattern(regexp = "^((13[0-9])|(15[^4,\\D])|(18[0,0-9]))\\d{8}$", message = "11位手机号码")
     private String phoneNumber;
 
     public Long getId() {

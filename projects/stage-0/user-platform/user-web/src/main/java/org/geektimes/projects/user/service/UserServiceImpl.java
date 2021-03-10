@@ -1,11 +1,17 @@
 package org.geektimes.projects.user.service;
 
+import org.apache.commons.lang.StringUtils;
+import org.geektimes.exception.BizException;
 import org.geektimes.projects.user.domain.User;
 import org.geektimes.projects.user.sql.LocalTransactional;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.persistence.EntityManager;
+import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import java.util.Set;
+import java.util.SplittableRandom;
 
 public class UserServiceImpl implements UserService {
 
@@ -15,6 +21,7 @@ public class UserServiceImpl implements UserService {
     @Resource(name = "bean/Validator")
     private Validator validator;
 
+
     @Override
     // 默认需要事务
     @LocalTransactional
@@ -22,12 +29,18 @@ public class UserServiceImpl implements UserService {
         // before process
 //        EntityTransaction transaction = entityManager.getTransaction();
 //        transaction.begin();
-
+//        Set<ConstraintViolation>
+        Set<ConstraintViolation<User>> constraintViolations = validator.validate(user);
+        StringBuilder sb = new StringBuilder();
+        constraintViolations.forEach(c->sb.append(c.getMessage()).append(";"));
+        if(StringUtils.isNotBlank(sb.toString())) {
+            throw new BizException(sb.toString());
+        }
         // 主调用
         entityManager.persist(user);
 
         // 调用其他方法方法
-        update(user); // 涉及事务
+        //update(user); // 涉及事务
         // register 方法和 update 方法存在于同一线程
         // register 方法属于 Outer 事务（逻辑）
         // update 方法属于 Inner 事务（逻辑）
@@ -53,7 +66,7 @@ public class UserServiceImpl implements UserService {
         // after process
         // transaction.commit();
 
-        return false;
+        return true;
     }
 
     @Override

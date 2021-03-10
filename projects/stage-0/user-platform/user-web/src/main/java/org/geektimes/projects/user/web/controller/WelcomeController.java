@@ -24,7 +24,11 @@ public class WelcomeController implements PageController {
         return "welcome.jsp";
     }
 
-//    @POST
+    @Override
+    public String inject() {
+        return null;
+    }
+    //    @POST
 //    public String register(HttpServletRequest request, HttpServletResponse response) throws Throwable {
 ////        request.getconte
 //        return "welcome.jsp";
